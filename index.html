@@ -1,0 +1,272 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:;">
+    <title>NoteDeck</title>
+    <link rel="icon" type="image/svg+xml" href="./assets/notedeck.svg">
+    <link rel="stylesheet" href="./style.css">
+    <script src="./renderer.js" defer></script>
+</head>
+<body>
+<div class="app">
+    <!-- Top bar -->
+    <header class="topbar">
+        <div class="topbar-left">
+            <div class="brand">
+                <img class="brand-icon" src="./assets/notedeck.svg" alt="">
+                <span>NoteDeck</span>
+            </div>
+
+            <nav class="menu-bar" aria-label="Application menu">
+            <div class="menu-item">
+                <button class="menu-trigger" data-menu="file-menu">File</button>
+                <div class="dropdown-menu" id="file-menu" hidden>
+                    <button data-action="new">New Note <kbd>Ctrl+N</kbd></button>
+                    <button data-action="open">Open File... <kbd>Ctrl+O</kbd></button>
+                    <div class="menu-separator"></div>
+                    <button data-action="save">Save <kbd>Ctrl+S</kbd></button>
+                    <button data-action="save-as">Save As...</button>
+                    <button data-action="export">Export Note...</button>
+                    <button data-action="print">Print <kbd>Ctrl+P</kbd></button>
+                    <div class="menu-separator"></div>
+                    <button data-action="delete">Delete Current Note</button>
+                </div>
+            </div>
+
+            <div class="menu-item">
+                <button class="menu-trigger" data-menu="edit-menu">Edit</button>
+                <div class="dropdown-menu" id="edit-menu" hidden>
+                    <button data-action="undo">Undo <kbd>Ctrl+Z</kbd></button>
+                    <button data-action="redo">Redo <kbd>Ctrl+Y</kbd></button>
+                    <div class="menu-separator"></div>
+                    <button data-action="find">Find in Note <kbd>Ctrl+F</kbd></button>
+                    <button data-action="select-all">Select All <kbd>Ctrl+A</kbd></button>
+                </div>
+            </div>
+
+            <div class="menu-item">
+                <button class="menu-trigger" data-menu="view-menu">View</button>
+                <div class="dropdown-menu" id="view-menu" hidden>
+                    <button data-action="toggle-sidebar">Toggle Sidebar</button>
+                    <button data-action="toggle-theme">Toggle Theme</button>
+                    <button data-action="sort-newest">Sort: Recently Modified</button>
+                    <button data-action="sort-title">Sort: Title A–Z</button>
+                </div>
+            </div>
+
+            <div class="menu-item">
+                <button class="menu-trigger" data-menu="tools-menu">Tools</button>
+                <div class="dropdown-menu" id="tools-menu" hidden>
+                    <button data-action="word-count">Word Count</button>
+                </div>
+            </div>
+
+            <div class="menu-item">
+                <button class="menu-trigger" data-menu="app-menu">NoteDeck</button>
+                <div class="dropdown-menu" id="app-menu" hidden>
+                    <button data-action="about">About NoteDeck</button>
+                    <div class="menu-separator"></div>
+                    <button data-action="quit">Quit NoteDeck</button>
+                </div>
+            </div>
+            </nav>
+        </div>
+
+        <div class="global-search">
+            <span>⌕</span>
+            <input id="global-search" type="search" placeholder="Search all notes...">
+            <kbd>Ctrl+K</kbd>
+        </div>
+
+        <div class="topbar-right">
+            <span id="save-indicator">All changes saved</span>
+        </div>
+    </header>
+
+    <!-- Main workspace -->
+    <main class="workspace">
+        <!-- Left sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-heading">
+                <span>WORKSPACE</span>
+                <button class="small-icon" id="collapse-sidebar" title="Collapse sidebar">‹</button>
+            </div>
+
+            <button class="nav-item active" id="all-notes-button">
+                <span>▤</span>
+                <span>All Notes</span>
+                <span class="nav-count" id="notes-count">0</span>
+            </button>
+
+            <div class="sidebar-section-title">LIBRARY</div>
+            <button class="nav-item" id="recent-button">
+                <span>◷</span><span>Recently Modified</span>
+            </button>
+
+            <div class="sidebar-bottom">
+                <button class="new-note-sidebar" data-action="new">
+                    <span>＋</span> New Note
+                </button>
+                <div class="storage-label">Stored on this device</div>
+            </div>
+        </aside>
+
+        <!-- Middle notes list -->
+        <section class="notes-panel">
+            <div class="notes-header">
+                <div>
+                    <h1 id="list-heading">All Notes</h1>
+                    <p id="list-subtitle">Your notes in one place</p>
+                </div>
+                <button class="new-note-button" id="new-note-button" title="Create note">＋</button>
+            </div>
+
+            <div class="notes-search">
+                <span>⌕</span>
+                <input id="list-search" type="search" placeholder="Search notes...">
+                <button id="clear-search" title="Clear search" hidden>×</button>
+            </div>
+
+            <div class="list-toolbar">
+                <span id="visible-count">0 notes</span>
+                <select id="sort-select" aria-label="Sort notes">
+                    <option value="modified">Recently modified</option>
+                    <option value="created">Date created</option>
+                    <option value="title">Title A–Z</option>
+                </select>
+            </div>
+
+            <div class="notes-list" id="notes-list" role="listbox" aria-label="Notes">
+                <!-- Note cards are rendered by renderer.js -->
+            </div>
+
+            <div class="empty-list" id="empty-list" hidden>
+                <div class="empty-icon">▤</div>
+                <h3 id="empty-title">No notes yet</h3>
+                <p id="empty-description">Create a note to get started.</p>
+                <button class="primary-button" data-action="new">＋ Create Note</button>
+            </div>
+        </section>
+
+        <!-- Right editor -->
+        <section class="editor-panel">
+            <header class="editor-toolbar">
+                <div class="editor-file-info">
+                    <span class="document-icon">▤</span>
+                    <span id="editor-note-name">Untitled</span>
+                    <span class="unsaved-dot" id="unsaved-dot" hidden>●</span>
+                </div>
+                <div class="editor-actions">
+                    <button class="secondary-button" data-action="save">Save</button>
+                    <button class="primary-button" data-action="save-as">Save As</button>
+                </div>
+            </header>
+
+            <div class="editor-scroll">
+                <article class="page">
+                    <input id="note-title" class="title-input"
+                           maxlength="200" placeholder="Untitled"
+                           aria-label="Note title">
+
+                    <div class="note-meta">
+                        <span id="editor-date">New note</span>
+                        <span>·</span>
+                        <span id="editor-word-count">0 words</span>
+                    </div>
+
+                    <div class="format-toolbar">
+                        <button type="button" data-format="bold" title="Bold (Ctrl+B)"
+                                aria-label="Bold"><b>B</b></button>
+                        <button type="button" data-format="italic" title="Italic (Ctrl+I)"
+                                aria-label="Italic"><i>I</i></button>
+                        <button type="button" data-format="underline" title="Underline (Ctrl+U)"
+                                aria-label="Underline"><u>U</u></button>
+                        <button type="button" data-format="strike" title="Strikethrough"
+                                aria-label="Strikethrough"><s>S</s></button>
+                        <button type="button" data-format="highlight" title="Highlight"
+                                aria-label="Highlight">🖍</button>
+                        <span class="toolbar-divider"></span>
+                        <button type="button" data-format="heading" title="Heading">H</button>
+                        <button type="button" data-format="quote" title="Quote">❝</button>
+                        <button type="button" data-format="code" title="Inline code">&lt;/&gt;</button>
+                        <button type="button" data-format="link" title="Add hyperlink"
+                                aria-label="Add hyperlink">🔗 Link</button>
+                        <span class="toolbar-divider"></span>
+                        <button type="button" data-format="bullet" title="Bullet list">• List</button>
+                        <button type="button" data-format="number" title="Numbered list">1. List</button>
+                        <button type="button" data-format="checklist" title="Checklist">☑ List</button>
+                        <span class="toolbar-divider"></span>
+                        <button type="button" id="insert-image"
+                                title="Insert an image; select it, then use Image −/+ to resize or drag to move"
+                                aria-label="Insert image">▧ Image</button>
+                        <input id="image-file-input" type="file"
+                               accept="image/png,image/jpeg,image/gif,image/webp"
+                               hidden>
+                        <button type="button" id="image-smaller"
+                                title="Make selected image smaller"
+                                aria-label="Make selected image smaller">Image −</button>
+                        <button type="button" id="image-larger"
+                                title="Make selected image larger"
+                                aria-label="Make selected image larger">Image +</button>
+                    </div>
+
+                    <div id="note-body" class="body-input" contenteditable="true"
+                         role="textbox" aria-multiline="true"
+                         aria-label="Note content" data-placeholder="Start writing your thoughts..."
+                         spellcheck="true"></div>
+
+                    <div class="editor-footer">
+                        <span id="character-count">0 characters</span>
+                        <span>Rich text editor</span>
+                    </div>
+                </article>
+            </div>
+        </section>
+    </main>
+
+    <dialog id="link-dialog" class="link-dialog" aria-labelledby="link-dialog-title">
+        <form id="link-form">
+            <h2 id="link-dialog-title">Add hyperlink</h2>
+            <label for="link-url">Web address or email</label>
+            <input id="link-url" type="text" inputmode="url"
+                   placeholder="https://example.com or name@example.com" required>
+            <div class="link-dialog-actions">
+                <button type="button" id="link-cancel">Cancel</button>
+                <button type="submit">Apply link</button>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog id="export-dialog" class="link-dialog" aria-labelledby="export-dialog-title">
+        <form id="export-form">
+            <h2 id="export-dialog-title">Export note</h2>
+            <label for="export-format">File format</label>
+            <select id="export-format">
+                <option value="pdf">PDF (.pdf)</option>
+                <option value="docx">Word document (.docx)</option>
+                <option value="json">JSON (.json)</option>
+                <option value="md">Markdown (.md)</option>
+                <option value="txt">Plain text (.txt)</option>
+                <option value="html">Web page (.html)</option>
+            </select>
+            <div class="link-dialog-actions">
+                <button type="button" id="export-cancel">Cancel</button>
+                <button type="submit">Choose save location…</button>
+            </div>
+        </form>
+    </dialog>
+
+    <footer class="statusbar">
+        <span id="status-message">Ready</span>
+        <span class="status-right">
+            <span id="status-note-count">0 notes</span>
+            <span>Local workspace</span>
+        </span>
+    </footer>
+</div>
+</body>
+</html>
