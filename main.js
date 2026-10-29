@@ -12,7 +12,7 @@ let printInProgress = false;
 const rendererUrl = pathToFileURL(path.join(__dirname, 'index.html')).href;
 const appIconPath = path.join(__dirname, 'assets', 'notedeck.png');
 app.setName('NoteDeck');
-app.setAppUserModelId('com.codvanta360.notedeck');
+app.setAppUserModelId('com.codvanta365.notedeck');
 
 function isTrustedRenderer(event) {
     return event.senderFrame?.url === rendererUrl;
